@@ -1,20 +1,28 @@
 import os
 from fastapi import FastAPI, Header, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import edge_tts
 
 app = FastAPI()
 
-# اختيار توكن أمان اختياري مطابق لـ KOKY_EDGE_TTS_TOKEN
+# تفعيل الـ CORS لسماح المتصفح بإرسال الطلبات للـ Relay مباشرة
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # السماح لأي مصدر بالاتصال
+    allow_credentials=True,
+    allow_methods=["*"],  # السماح بجميع الطرق (POST, GET, OPTIONS...)
+    allow_headers=["*"],  # السماح بجميع الترويسات (Headers)
+)
+
 RELAY_TOKEN = os.getenv("RELAY_TOKEN", "")
 
 class TTSRequest(BaseModel):
     text: str
-    voice: str = "ar-EG-SalmaNeural" # الصوت النسائي الافتراضي بالعربية
+    voice: str = "ar-EG-SalmaNeural" # الصوت النسائي الافتراضي
 
 @app.post("/api/koky-tts")
 async def text_to_speech(req: TTSRequest, authorization: str = Header(None)):
-    # التحقق من التوكن إن وجد
     if RELAY_TOKEN:
         if not authorization or authorization != f"Bearer {RELAY_TOKEN}":
             raise HTTPException(status_code=401, detail="Unauthorized")
