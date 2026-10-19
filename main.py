@@ -22,7 +22,7 @@ async def text_to_speech(req: TTSRequest, authorization: str = Header(None)):
     try:
         communicate = edge_tts.Communicate(req.text, req.voice)
         audio_data = bytearray()
-        async for chunk in communicate.communicate():
+        async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 audio_data.extend(chunk["data"])
                 
